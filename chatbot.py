@@ -4,9 +4,9 @@ import string
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
-
 from transformers import pipeline, Conversation
 
+# download nltk resources
 nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
@@ -33,11 +33,13 @@ class Chatbot:
                 "I'm not sure I understand. Could you rephrase that?",
                 "I didn't catch that. Can you say it again?"
             ]
+            # add more predefined repsonses in here 
         }
         if self.use_ai:
             self.conversational_pipeline = pipeline("conversational", model="microsoft/DialoGPT-medium")
 
     def _initialize_intent_keywords(self):
+        # define the keywords for each intent
         intent_keywords_raw = {
             'greeting': ['hello', 'hi', 'hey', 'greetings', 'howdy'],
             'farewell': ['bye', 'goodbye', 'see you', 'later'],
@@ -66,6 +68,7 @@ class Chatbot:
         tokens = word_tokenize(text_clean)
         filtered_tokens = [word for word in tokens if word not in self.stop_words]
         lemmatized_tokens = [self.lemmatizer.lemmatize(word) for word in filtered_tokens]
+        # Return the lemmatized tokens and the cleaned text
         return lemmatized_tokens, text_clean
 
     def detect_intent(self, tokens, text_clean):
@@ -78,6 +81,7 @@ class Chatbot:
         for intent, phrases in self.intent_keywords.items():
             matches = 0
             for phrase in phrases:
+                # For multi-word phrases, search in the full text. Otherwise, search in tokens.
                 if ' ' in phrase:
                     if phrase in text_clean:
                         matches += 1
@@ -97,7 +101,9 @@ class Chatbot:
         if self.use_ai:
             try:
                 conversation = Conversation(user_input)
+                # Process the conversation using the conversational pipeline from Hugging Face
                 result = self.conversational_pipeline(conversation)
+                # return the generated response from the conversational pipeline
                 return result.generated_responses[-1]
             except Exception as e:
                 print("Error with conversational AI:", e)
@@ -123,5 +129,6 @@ class Chatbot:
                 break
 
 if __name__ == "__main__":
+    # set use_ai=True to use the free DialoGPT conversational model and vice versa.
     chatbot = Chatbot(use_ai=True)
     chatbot.start_chat()
